@@ -1,0 +1,58 @@
+# Practical Machine Learning Project
+
+## Summary
+
+This project is to build a model to predict the type of activities performed by participants.
+
+The training data for this project are available here:
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv
+
+The test data are available here:
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
+
+## Load and Clean Data
+
+```{r, message=FALSE, warning=FALSE}
+library(caret)
+training<-read.csv('pml-training.csv',header= TRUE)
+testing<-read.csv('pml-testing.csv',header=TRUE)
+#remove NAs
+training<-training[,colSums(is.na(training)) == 0]
+#remove near zero variance
+nearZero<-nearZeroVar(training, saveMetrics=TRUE)
+training<-training[, nearZero$nzv==FALSE]
+#remove unrelevant columns
+training<-training[,7:ncol(training)]
+```
+
+## Build the model using random forest
+
+```{r, message=FALSE, warning=FALSE}
+set.seed(1990)
+inTrain<-createDataPartition(training$classe,p=0.7,list=FALSE)
+train<-training[inTrain,]
+test<-training[-inTrain,]
+#set the cross-validation
+ctrl<-trainControl(method="cv", number=5, allowParallel=TRUE)
+modFit<-train(classe ~ ., data=train, method="rf", trControl=ctrl)
+modFit$finalModel
+```
+
+## Test&Out-of-Sample Error
+
+```{r}
+testingPredict<-predict(modFit, test)
+cm<-confusionMatrix(testingPredict,test$classe)
+cm
+outError<-1-sum(diag(cm$table))/sum(cm$table)
+outError
+```
+The out of sample error is less than 1%
+
+## Predictions
+
+```{r}
+predict20 <- predict(modFit, testing)
+print( predict20 )
+```
+The results are all correct
