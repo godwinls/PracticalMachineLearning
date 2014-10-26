@@ -3,6 +3,7 @@
 ## Summary
 
 This project is to build a model to predict the type of activities performed by participants.
+You can visit the html here:http://godwinls.github.io/PracticalMachineLearning
 
 The training data for this project are available here:
 https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv
