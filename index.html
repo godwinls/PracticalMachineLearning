@@ -31,37 +31,149 @@
     <!-- MAIN CONTENT -->
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
-        <h3>
-<a name="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages"><span class="octicon octicon-link"></span></a>Welcome to GitHub Pages.</h3>
+        <p></p>
 
-<p>This automatic page generator is the easiest way to create beautiful pages for all of your projects. Author your page content here using GitHub Flavored Markdown, select a template crafted by a designer, and publish. After your page is generated, you can check out the new branch:</p>
+<p></p>
 
-<pre><code>$ cd your_repo_root/repo_name
-$ git fetch origin
-$ git checkout gh-pages
-</code></pre>
+<p>
 
-<p>If you're using the GitHub for Mac, simply sync your repository and you'll see the new branch.</p>
+</p>
 
-<h3>
-<a name="designer-templates" class="anchor" href="#designer-templates"><span class="octicon octicon-link"></span></a>Designer Templates</h3>
+<p></p>
 
-<p>We've crafted some handsome templates for you to use. Go ahead and continue to layouts to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved if it remained markdown format.</p>
+<p></p>
 
-<h3>
-<a name="rather-drive-stick" class="anchor" href="#rather-drive-stick"><span class="octicon octicon-link"></span></a>Rather Drive Stick?</h3>
+<p></p>
 
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator written by our own Tom Preston-Werner. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
 
-<h3>
-<a name="authors-and-contributors" class="anchor" href="#authors-and-contributors"><span class="octicon octicon-link"></span></a>Authors and Contributors</h3>
 
-<p>You can <a href="https://github.com/blog/821" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor's GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
 
-<h3>
-<a name="support-or-contact" class="anchor" href="#support-or-contact"><span class="octicon octicon-link"></span></a>Support or Contact</h3>
+<div>
 
-<p>Having trouble with Pages? Check out the documentation at <a href="http://help.github.com/pages">http://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and we’ll help you sort it out.</p>
+
+
+
+<div>
+<h1>
+<a name="practical-machine-learning-project" class="anchor" href="#practical-machine-learning-project"><span class="octicon octicon-link"></span></a>Practical Machine Learning Project</h1>
+<div>
+<h2>
+<a name="summary" class="anchor" href="#summary"><span class="octicon octicon-link"></span></a>Summary</h2>
+<p>This project is to build a model to predict the type of activities performed by participants.</p>
+<p>The training data for this project are available here: <a href="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv">https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv</a></p>
+<p>The test data are available here: <a href="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv">https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv</a></p>
+</div>
+
+<div>
+<h2>
+<a name="load-and-clean-data" class="anchor" href="#load-and-clean-data"><span class="octicon octicon-link"></span></a>Load and Clean Data</h2>
+<pre><code>library(caret)
+training&lt;-read.csv('pml-training.csv',header= TRUE)
+testing&lt;-read.csv('pml-testing.csv',header=TRUE)
+#remove NAs
+training&lt;-training[,colSums(is.na(training)) == 0]
+#remove near zero variance
+nearZero&lt;-nearZeroVar(training, saveMetrics=TRUE)
+training&lt;-training[, nearZero$nzv==FALSE]
+#remove unrelevant columns
+training&lt;-training[,7:ncol(training)]</code></pre>
+</div>
+
+<div>
+<h2>
+<a name="build-the-model-using-random-forest" class="anchor" href="#build-the-model-using-random-forest"><span class="octicon octicon-link"></span></a>Build the model using random forest</h2>
+<pre><code>set.seed(1990)
+inTrain&lt;-createDataPartition(training$classe,p=0.7,list=FALSE)
+train&lt;-training[inTrain,]
+test&lt;-training[-inTrain,]
+#set the cross-validation
+ctrl&lt;-trainControl(method="cv", number=5, allowParallel=TRUE)
+modFit&lt;-train(classe ~ ., data=train, method="rf", trControl=ctrl)
+modFit$finalModel</code></pre>
+<pre><code>## 
+## Call:
+##  randomForest(x = x, y = y, mtry = param$mtry) 
+##                Type of random forest: classification
+##                      Number of trees: 500
+## No. of variables tried at each split: 2
+## 
+##         OOB estimate of  error rate: 0.71%
+## Confusion matrix:
+##      A    B    C    D    E class.error
+## A 3901    3    1    1    0    0.001280
+## B   13 2636    9    0    0    0.008277
+## C    1   14 2377    4    0    0.007930
+## D    0    0   42 2208    2    0.019538
+## E    0    0    3    4 2518    0.002772</code></pre>
+</div>
+
+<div>
+<h2>
+<a name="testout-of-sample-error" class="anchor" href="#testout-of-sample-error"><span class="octicon octicon-link"></span></a>Test&amp;Out-of-Sample Error</h2>
+<pre><code>testingPredict&lt;-predict(modFit, test)
+cm&lt;-confusionMatrix(testingPredict,test$classe)
+cm</code></pre>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 1672   12    0    0    0
+##          B    2 1127    9    0    0
+##          C    0    0 1016   15    2
+##          D    0    0    1  949    3
+##          E    0    0    0    0 1077
+## 
+## Overall Statistics
+##                                        
+##                Accuracy : 0.993        
+##                  95% CI : (0.99, 0.995)
+##     No Information Rate : 0.284        
+##     P-Value [Acc &gt; NIR] : &lt;2e-16       
+##                                        
+##                   Kappa : 0.991        
+##  Mcnemar's Test P-Value : NA           
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity             0.999    0.989    0.990    0.984    0.995
+## Specificity             0.997    0.998    0.997    0.999    1.000
+## Pos Pred Value          0.993    0.990    0.984    0.996    1.000
+## Neg Pred Value          1.000    0.997    0.998    0.997    0.999
+## Prevalence              0.284    0.194    0.174    0.164    0.184
+## Detection Rate          0.284    0.192    0.173    0.161    0.183
+## Detection Prevalence    0.286    0.193    0.176    0.162    0.183
+## Balanced Accuracy       0.998    0.994    0.993    0.992    0.998</code></pre>
+<pre><code>outError&lt;-1-sum(diag(cm$table))/sum(cm$table)
+outError</code></pre>
+<pre><code>## [1] 0.007477</code></pre>
+<p>The out of sample error is less than 1%</p>
+</div>
+
+<div>
+<h2>
+<a name="predictions" class="anchor" href="#predictions"><span class="octicon octicon-link"></span></a>Predictions</h2>
+<pre><code>predict20 &lt;- predict(modFit, testing)
+print( predict20 )</code></pre>
+<pre><code>##  [1] B A B A A E D B A A B C B A E E A B B B
+## Levels: A B C D E</code></pre>
+<p>The results are all correct</p>
+</div>
+
+<p></p>
+</div>
+
+<p></p>
+</div>
+
+
+
+
+
+
+
+<p>
+</p>
       </section>
     </div>
 
